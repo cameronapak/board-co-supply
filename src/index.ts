@@ -2,7 +2,7 @@ import { type BunFile } from 'bun';
 import { validateArtwork } from './utils';
 import homepage from "./layout/index.html";
 
-const server = Bun.serve({
+Bun.serve({
     port: 3000,
     routes: {
         // Serve the main HTML page
@@ -122,5 +122,3 @@ const server = Bun.serve({
         "/*": () => new Response('Not Found', { status: 404 })
     }
 });
-
-console.log(`🚀 Server running at ${server.url}`);
