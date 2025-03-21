@@ -8,14 +8,14 @@ async function validateArtwork(file: BunFile) {
     }
 
     // Use a library like Sharp for Node.js to check dimensions and resolution
-    // Since Bun.js doesn't directly support image processing, you might need to use a Node.js library
-    const sharp = await import('sharp');
+    const { default: sharp } = await import('sharp');
     try {
-        const img = await sharp(file.arrayBuffer());
+        const buffer = await file.arrayBuffer();
+        const img = sharp(Buffer.from(buffer));
         const metadata = await img.metadata();
         
         // Check dimensions (assuming standard aspect ratio)
-        if (metadata.width < 1200 || metadata.height < 1050) {
+        if (!metadata.width || !metadata.height || metadata.width < 1200 || metadata.height < 1050) {
             return { valid: false, message: 'Invalid dimensions.' };
         }
         
@@ -35,14 +35,21 @@ Bun.serve({
     async fetch(req) {
         if (req.method === 'POST') {
             try {
-                const formData = await Bun.readableStreamToFormData(req.body);
-                const file = formData.get('file');
-                
-                if (!file) {
-                    return new Response(JSON.stringify({ message: 'No file provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+                const body = req.body;
+                if (!body) {
+                    return new Response(JSON.stringify({ message: 'No request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
                 }
                 
-                const result = await validateArtwork(file);
+                const formData = await Bun.readableStreamToFormData(body as ReadableStream);
+                const file = formData.get('file');
+                
+                if (!file || !(file instanceof Blob)) {
+                    return new Response(JSON.stringify({ message: 'No valid file provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+                }
+                
+                // Create a BunFile from the Blob
+                const bunFile = file as unknown as BunFile;
+                const result = await validateArtwork(bunFile);
                 if (!result.valid) {
                     return new Response(JSON.stringify({ message: result.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
                 }
