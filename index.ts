@@ -18,16 +18,8 @@ const server = Bun.serve({
         "/validate": {
             POST: async (req) => {
                 try {
-                    const body = req.body;
-                    if (!body) {
-                        console.log('No request body received');
-                        return Response.json(
-                            { message: 'No request body' },
-                            { status: 400 }
-                        );
-                    }
-                    
-                    const formData = await Bun.readableStreamToFormData(body as ReadableStream);
+                    // Get FormData directly from the request
+                    const formData = await req.formData();
                     const file = formData.get('file');
 
                     console.log('Received file:', {
