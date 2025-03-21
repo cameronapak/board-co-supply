@@ -122,3 +122,5 @@ Bun.serve({
         "/*": () => new Response('Not Found', { status: 404 })
     }
 });
+
+console.log("Server is running on http://localhost:3000");
