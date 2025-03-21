@@ -17,6 +17,7 @@
     "tailwindcss": "^4"
   },
   "scripts": {
-    "dev": "bun run src/index.ts --watch"
+    "dev": "bun run src/index.ts --watch",
+    "build-executable": "bun build --compile --minify --sourcemap ./src/index.ts --outfile ./dist/board-co-supply"
   }
 }
