@@ -1,9 +1,5 @@
 import { type BunFile } from 'bun';
 import { validateArtwork } from './utils';
-import tailwindPlugin from 'bun-plugin-tailwind';
-
-// Initialize Tailwind plugin
-Bun.plugin(tailwindPlugin);
 
 const server = Bun.serve({
     port: 3000,
@@ -14,16 +10,6 @@ const server = Bun.serve({
                 const html = Bun.file('./public/index.html');
                 return new Response(html, {
                     headers: { 'Content-Type': 'text/html' }
-                });
-            }
-        },
-
-        // Serve the CSS file
-        "/styles.css": {
-            GET: () => {
-                const css = Bun.file('./styles.css');
-                return new Response(css, {
-                    headers: { 'Content-Type': 'text/css' }
                 });
             }
         },

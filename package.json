@@ -11,9 +11,12 @@
   },
   "dependencies": {
     "@opendesign/illustrator-parser-pdfcpu": "^1.1.2",
-    "bun-plugin-tailwind": "^0.0.15",
+    "tailwindcss": "^4",
+    "bun-plugin-tailwind": "latest",
     "pdf-lib": "^1.17.1",
-    "sharp": "^0.33.5",
-    "tailwindcss": "^4.0.15"
+    "sharp": "^0.33.5"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts --watch"
   }
 }
