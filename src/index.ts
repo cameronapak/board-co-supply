@@ -7,7 +7,7 @@ const server = Bun.serve({
         // Serve the main HTML page
         "/": {
             GET: () => {
-                const html = Bun.file('./public/index.html');
+                const html = Bun.file('./src/layout/index.html');
                 return new Response(html, {
                     headers: { 'Content-Type': 'text/html' }
                 });
