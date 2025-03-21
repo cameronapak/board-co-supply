@@ -1,36 +1,68 @@
 import { type BunFile } from 'bun';
 import { validateArtwork } from './utils';
 
-// Example usage in a Bun.js endpoint
-Bun.serve({
-    async fetch(req) {
-        if (req.method === 'POST') {
-            try {
-                const body = req.body;
-                if (!body) {
-                    return new Response(JSON.stringify({ message: 'No request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-                }
-                
-                const formData = await Bun.readableStreamToFormData(body as ReadableStream);
-                const file = formData.get('file');
-                
-                if (!file || !(file instanceof Blob)) {
-                    return new Response(JSON.stringify({ message: 'No valid file provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-                }
-                
-                // Create a BunFile from the Blob
-                const bunFile = file as unknown as BunFile;
-                const result = await validateArtwork(bunFile);
-                if (!result.valid) {
-                    return new Response(JSON.stringify({ message: result.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-                }
-                
-                return new Response(JSON.stringify({ message: 'File is valid' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            } catch (error) {
-                return new Response(JSON.stringify({ message: 'Error validating file' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+const server = Bun.serve({
+    port: 3000,
+    routes: {
+        // Serve the main HTML page
+        "/": {
+            GET: () => {
+                const html = Bun.file('./public/index.html');
+                return new Response(html, {
+                    headers: { 'Content-Type': 'text/html' }
+                });
             }
-        } else {
-            return new Response('Only POST requests are supported.', { status: 405 });
-        }
-    },
+        },
+
+        // Handle artwork validation
+        "/validate": {
+            POST: async (req) => {
+                try {
+                    const body = req.body;
+                    if (!body) {
+                        return Response.json(
+                            { message: 'No request body' },
+                            { status: 400 }
+                        );
+                    }
+                    
+                    const formData = await Bun.readableStreamToFormData(body as ReadableStream);
+                    const file = formData.get('file');
+                    
+                    if (!file || !(file instanceof Blob)) {
+                        return Response.json(
+                            { message: 'No valid file provided' },
+                            { status: 400 }
+                        );
+                    }
+                    
+                    // Create a BunFile from the Blob
+                    const bunFile = file as unknown as BunFile;
+                    const result = await validateArtwork(bunFile);
+                    
+                    if (!result.valid) {
+                        return Response.json(
+                            { message: result.message },
+                            { status: 400 }
+                        );
+                    }
+                    
+                    return Response.json(
+                        { message: 'File is valid' },
+                        { status: 200 }
+                    );
+                } catch (error) {
+                    return Response.json(
+                        { message: 'Error validating file' },
+                        { status: 500 }
+                    );
+                }
+            }
+        },
+
+        // Catch-all route for unmatched paths
+        "/*": () => new Response('Not Found', { status: 404 })
+    }
 });
+
+console.log(`🚀 Server running at ${server.url}`);
