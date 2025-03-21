@@ -13,6 +13,8 @@ export async function validateArtwork(file: BunFile) {
         const buffer = await file.arrayBuffer();
         const img = sharp(Buffer.from(buffer));
         const metadata = await img.metadata();
+
+        console.log(metadata);
         
         // Check dimensions (assuming standard aspect ratio)
         if (!metadata.width || !metadata.height || metadata.width < 1200 || metadata.height < 1050) {

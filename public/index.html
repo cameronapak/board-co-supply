@@ -126,6 +126,8 @@
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
+            console.log(fileInput.files);
+
             try {
                 const response = await fetch('/validate', {
                     method: 'POST',

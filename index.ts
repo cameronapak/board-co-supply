@@ -20,6 +20,7 @@ const server = Bun.serve({
                 try {
                     const body = req.body;
                     if (!body) {
+                        console.log('No request body received');
                         return Response.json(
                             { message: 'No request body' },
                             { status: 400 }
@@ -28,19 +29,45 @@ const server = Bun.serve({
                     
                     const formData = await Bun.readableStreamToFormData(body as ReadableStream);
                     const file = formData.get('file');
+
+                    console.log('Received file:', {
+                        type: file instanceof File ? file.type : 'not a file',
+                        constructor: file?.constructor.name,
+                        isBlob: file instanceof Blob,
+                        isFile: file instanceof File
+                    });
                     
-                    if (!file || !(file instanceof Blob)) {
+                    if (!file) {
+                        console.log('No file received in form data');
                         return Response.json(
-                            { message: 'No valid file provided' },
+                            { message: 'No file provided' },
+                            { status: 400 }
+                        );
+                    }
+
+                    if (!(file instanceof File)) {
+                        console.log('File is not a File instance');
+                        return Response.json(
+                            { message: 'Invalid file format' },
                             { status: 400 }
                         );
                     }
                     
-                    // Create a BunFile from the Blob
-                    const bunFile = file as unknown as BunFile;
+                    // Convert File to BunFile
+                    const arrayBuffer = await file.arrayBuffer();
+                    const bunFile = Bun.file(new Uint8Array(arrayBuffer), {
+                        type: file.type
+                    }) as BunFile;
+
+                    console.log('Created BunFile:', {
+                        type: bunFile.type,
+                        size: bunFile.size
+                    });
+
                     const result = await validateArtwork(bunFile);
                     
                     if (!result.valid) {
+                        console.log('Validation failed:', result.message);
                         return Response.json(
                             { message: result.message },
                             { status: 400 }
@@ -52,6 +79,7 @@ const server = Bun.serve({
                         { status: 200 }
                     );
                 } catch (error) {
+                    console.error('Error processing file:', error);
                     return Response.json(
                         { message: 'Error validating file' },
                         { status: 500 }
