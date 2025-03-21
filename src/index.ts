@@ -47,13 +47,19 @@ const server = Bun.serve({
                     if (!result.valid) {
                         console.log('Validation failed:', result.message);
                         return Response.json(
-                            { message: result.message },
+                            { 
+                                message: result.message, 
+                                details: result.details 
+                            },
                             { status: 400 }
                         );
                     }
                     
                     return Response.json(
-                        { message: 'File is valid' },
+                        { 
+                            message: 'File is valid',
+                            details: result.details
+                        },
                         { status: 200 }
                     );
                 } catch (error) {
@@ -63,6 +69,15 @@ const server = Bun.serve({
                         { status: 500 }
                     );
                 }
+            }
+        },
+
+        // Serve the CSS file
+        "/styles.css": {
+            GET: () => {
+                return new Response(Bun.file('./styles.css'), {
+                    headers: { 'Content-Type': 'text/css' }
+                });
             }
         },
 
