@@ -26,7 +26,8 @@ const server = Bun.serve({
                         type: file instanceof File ? file.type : 'not a file',
                         constructor: file?.constructor.name,
                         isBlob: file instanceof Blob,
-                        isFile: file instanceof File
+                        isFile: file instanceof File,
+                        name: file instanceof File ? file.name : 'no name'
                     });
                     
                     if (!file) {
@@ -44,19 +45,10 @@ const server = Bun.serve({
                             { status: 400 }
                         );
                     }
-                    
-                    // Convert File to BunFile
-                    const arrayBuffer = await file.arrayBuffer();
-                    const bunFile = Bun.file(new Uint8Array(arrayBuffer), {
-                        type: file.type
-                    }) as BunFile;
 
-                    console.log('Created BunFile:', {
-                        type: bunFile.type,
-                        size: bunFile.size
-                    });
-
-                    const result = await validateArtwork(bunFile);
+                    // Pass the File directly to validateArtwork
+                    // Since File is a Blob which extends BunFile
+                    const result = await validateArtwork(file as unknown as BunFile);
                     
                     if (!result.valid) {
                         console.log('Validation failed:', result.message);
