@@ -1,18 +1,12 @@
 import { type BunFile } from 'bun';
 import { validateArtwork } from './utils';
+import homepage from "./layout/index.html";
 
 const server = Bun.serve({
     port: 3000,
     routes: {
         // Serve the main HTML page
-        "/": {
-            GET: () => {
-                const html = Bun.file('./src/layout/index.html');
-                return new Response(html, {
-                    headers: { 'Content-Type': 'text/html' }
-                });
-            }
-        },
+        "/": homepage,
 
         // Handle artwork validation
         "/validate": {
