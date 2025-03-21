@@ -122,14 +122,19 @@
                 // Update file information if available
                 if (data.details) {
                     const details = data.details;
+                    const fileName = fileInput.files && fileInput.files.length > 0 ? 
+                        fileInput.files[0].name : 'Unknown';
+                    
                     const infoItems = [
                         ['File Type', details.fileType],
+                        ['Filename', fileName],
                         ['Current Size', details.currentWidth && details.currentHeight ? 
-                            `${details.currentWidth} x ${details.currentHeight}px` : 'Unknown'],
-                        ['Required Size', `${details.requiredWidth} x ${details.requiredHeight}px`]
+                            `${details.currentWidth} × ${details.currentHeight}px` : 'Unknown'],
+                        ['Required Size', `${details.requiredWidth} × ${details.requiredHeight}px`]
                     ];
 
-                    if (details.fileType === 'PSD') {
+                    // Show resolution for raster image types
+                    if (details.currentResolution) {
                         infoItems.push(
                             ['Current Resolution', `${details.currentResolution || 'Unknown'} DPI`],
                             ['Required Resolution', `${details.requiredResolution} DPI`]
@@ -141,7 +146,7 @@
                         row.className = 'contents';
                         row.innerHTML = `
                             <div class="text-gray-500">${label}:</div>
-                            <div class="text-gray-900">${value}</div>
+                            <div class="text-gray-900 font-medium">${value}</div>
                         `;
                         fileInfo.appendChild(row);
                     });
