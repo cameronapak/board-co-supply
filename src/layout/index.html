@@ -16,16 +16,16 @@
                 <h2 class="text-lg font-semibold text-blue-800 mb-2">Requirements</h2>
                 <ul class="list-disc list-inside text-blue-700 space-y-1">
                     <li>Minimum dimensions: 1200 x 1050 pixels</li>
-                    <li>Resolution: 300 DPI (for PSD files)</li>
-                    <li>Accepted formats: AI, PSD, PDF</li>
+                    <li>Resolution: 300 DPI (for raster images)</li>
+                    <li>Accepted formats: AI, PSD, PDF, JPG, PNG, WebP, TIFF</li>
                 </ul>
             </div>
             
             <form id="uploadForm" class="space-y-4">
                 <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-500 transition-colors">
                     <p class="text-gray-700">Drag and drop your file here or click to select</p>
-                    <p class="text-sm text-gray-500 mt-2">Supported formats: AI, PSD, PDF</p>
-                    <input type="file" id="fileInput" accept=".ai,.pdf,.psd" class="hidden">
+                    <p class="text-sm text-gray-500 mt-2">Supported formats: AI, PSD, PDF, and print-ready images</p>
+                    <input type="file" id="fileInput" accept=".ai,.pdf,.psd,.jpg,.jpeg,.png,.webp,.tiff,.tif" class="hidden">
                 </div>
                 <button type="submit" id="submitBtn" disabled class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
                     Validate Artwork

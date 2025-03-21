@@ -27,7 +27,19 @@ const server = Bun.serve({
                     if (!file) {
                         console.log('No file received in form data');
                         return Response.json(
-                            { message: 'No file provided' },
+                            { 
+                                message: 'No file provided',
+                                details: {
+                                    fileType: 'unknown',
+                                    requiredWidth: 1200,
+                                    requiredHeight: 1050,
+                                    requiredResolution: 300,
+                                    suggestions: [
+                                        'Please select a file to upload',
+                                        'Supported formats: AI, PSD, PDF, JPG, PNG, etc.'
+                                    ]
+                                }
+                            },
                             { status: 400 }
                         );
                     }
@@ -35,7 +47,19 @@ const server = Bun.serve({
                     if (!(file instanceof File)) {
                         console.log('File is not a File instance');
                         return Response.json(
-                            { message: 'Invalid file format' },
+                            { 
+                                message: 'Invalid file format',
+                                details: {
+                                    fileType: 'unknown',
+                                    requiredWidth: 1200,
+                                    requiredHeight: 1050,
+                                    requiredResolution: 300,
+                                    suggestions: [
+                                        'The uploaded data is not recognized as a valid file',
+                                        'Try a different file or upload method'
+                                    ]
+                                }
+                            },
                             { status: 400 }
                         );
                     }
@@ -65,7 +89,20 @@ const server = Bun.serve({
                 } catch (error) {
                     console.error('Error processing file:', error);
                     return Response.json(
-                        { message: 'Error validating file' },
+                        { 
+                            message: 'Error validating file',
+                            details: {
+                                fileType: 'unknown',
+                                requiredWidth: 1200,
+                                requiredHeight: 1050,
+                                requiredResolution: 300,
+                                suggestions: [
+                                    'An unexpected error occurred while processing your file',
+                                    'Try a different file or format',
+                                    'Make sure your file is not corrupted'
+                                ]
+                            }
+                        },
                         { status: 500 }
                     );
                 }
