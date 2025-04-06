@@ -231,7 +231,7 @@ const SkateboardDesigner: React.FC = () => {
   }, [isDragging, handleMouseMove])
 
   return (
-    <div className="relative w-full grid sm:grid-cols-2 max-sm:grid-rows-[350px_1fr] items-center gap-8 mx-auto">
+    <div className="relative w-full h-full grid sm:grid-cols-2 max-sm:grid-rows-[1fr_auto] items-center gap-8 mx-auto">
       <div className="p-6 flex justify-center gap-4">
         <div style={{ aspectRatio: "100/413" }} ref={containerRef} className="relative w-[128px] px-[1px] sm:pb-[125%] max-sm:pb-0 max-sm:w-full h-[350px]">
             <div ref={designRef} className="absolute inset-0 bg-white overflow-hidden">
@@ -290,28 +290,28 @@ const SkateboardDesigner: React.FC = () => {
           className="hidden"
           id="file-upload"
         />
-        <div className="flex space-x-4">
-          <button>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-bold">Skateboard Customizer</h2>
+          <button className="bg-white p-2 w-full rounded-md shadow active:shadow-none active:scale-95 transition-all duration-100">
             <label htmlFor="file-upload" className="cursor-pointer">
               Upload Design
             </label>
           </button>
           {image && (
-            <>
-              <button onClick={handleRotate}>
+            <div className="grid grid-cols-2 gap-4">
+              <button className="flex items-center justify-center gap-1 bg-white p-2 w-full rounded-md shadow active:shadow-none active:scale-95 transition-all duration-100" onClick={handleRotate}>
                 <RotateCw className="mr-2 h-4 w-4" />
                 Rotate
               </button>
-              <button onClick={handleExport}>
+              <button className="flex items-center justify-center gap-1 bg-white p-2 w-full rounded-md shadow active:shadow-none active:scale-95 transition-all duration-100" onClick={handleExport}>
                 <Download className="mr-2 h-4 w-4" />
                 Export Image
               </button>
-            </>
+            </div>
           )}
         </div>
         {image && (
           <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium">Image Size:</span>
             <input
               type="range"
               min="1"
