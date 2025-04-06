@@ -186,15 +186,11 @@ const Skateboard = ({
                 keepRatio={true}
                 centeredScaling={true}
                 boundBoxFunc={(oldBox, newBox) => {
-                  // Maintain aspect ratio
-                  const ratio = oldBox.width / oldBox.height;
-                  const newWidth = Math.max(30, newBox.width);
-                  const newHeight = newWidth / ratio;
-                  return {
-                    ...newBox,
-                    width: newWidth,
-                    height: newHeight,
-                  };
+                  // Ensure minimum size
+                  if (newBox.width < 20 || newBox.height < 20) {
+                    return oldBox;
+                  }
+                  return newBox;
                 }}
               />
             )}
