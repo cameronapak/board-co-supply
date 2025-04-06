@@ -11,6 +11,13 @@ interface SkateboardProps {
   imageUrl?: string;
 }
 
+interface ImageConfig {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const Skateboard = ({ 
   width = window.innerWidth, 
   height = window.innerHeight,
@@ -36,6 +43,13 @@ const Skateboard = ({
   // Image state
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [isSelected, setIsSelected] = useState(false);
+  const [imageConfig, setImageConfig] = useState<ImageConfig>({
+    x: width / 2 - 100,
+    y: height / 2 - 100,
+    width: 200,
+    height: 200
+  });
+  
   const imageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
 
@@ -63,29 +77,57 @@ const Skateboard = ({
 
   // Handle deselection when clicking elsewhere on stage
   const handleCheckDeselect = (e: any) => {
+    // do we click on empty area?
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       setIsSelected(false);
     }
   };
 
+  // Handle image drag end
+  const handleDragEnd = (e: any) => {
+    setImageConfig({
+      ...imageConfig,
+      x: e.target.x(),
+      y: e.target.y(),
+    });
+  };
+
+  // Handle transformation end
+  const handleTransformEnd = () => {
+    // Get the node reference
+    const node = imageRef.current;
+    if (!node) return;
+
+    // Get current scale
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+
+    // Reset scale to 1 (important for proper scaling)
+    node.scaleX(1);
+    node.scaleY(1);
+
+    // Update image with new dimensions
+    setImageConfig({
+      x: node.x(),
+      y: node.y(),
+      // Update width and height with applied scale
+      width: Math.max(20, node.width() * scaleX),
+      height: Math.max(20, node.height() * scaleY),
+    });
+  };
+
   return (
-    <Stage width={width} height={height} onClick={handleCheckDeselect}>
+    <Stage width={width} height={height} onMouseDown={handleCheckDeselect} onTouchStart={handleCheckDeselect}>
       <Layer>
         <Group 
           x={centerX} 
           y={centerY} 
           scaleX={scale} 
           scaleY={scale}
-          clipFunc={(ctx) => {
-            ctx.beginPath();
-            ctx.rect(0, 0, 428, 1741);
-            ctx.clip();
-          }}
         >
           {/* Main skateboard shape */}
           <Path
-            draggable={true}
             fill="white"
             data="M423.711 1527.14C423.711 1644.66 329.682 1737 213.855 1737C98.0288 1737 4 1644.66 4 1527.14V213.855C4 98.0288 98.0288 4 213.855 4C329.682 4 423.711 98.0288 423.711 213.855V1527.14Z"
             stroke={color}
@@ -172,13 +214,15 @@ const Skateboard = ({
             <Image
               ref={imageRef}
               image={image}
-              x={width / 2 - 100}
-              y={height / 2 - 100}
-              width={200}
-              height={200}
+              x={imageConfig.x}
+              y={imageConfig.y}
+              width={imageConfig.width}
+              height={imageConfig.height}
               draggable
               onClick={handleSelect}
               onTap={handleSelect}
+              onDragEnd={handleDragEnd}
+              onTransformEnd={handleTransformEnd}
             />
             {isSelected && (
               <Transformer
