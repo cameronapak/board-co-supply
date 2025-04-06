@@ -6,6 +6,7 @@ interface SkateboardProps {
   color?: string;
   opacity?: number;
   fillOpacity?: number;
+  padding?: number;
 }
 
 const Skateboard = ({ 
@@ -13,14 +14,40 @@ const Skateboard = ({
   height = window.innerHeight,
   color = '#000000',
   opacity = 1,
-  fillOpacity = 1
+  fillOpacity = 1,
+  padding = 20
 }: SkateboardProps) => {
+  // Original SVG dimensions
+  const originalWidth = 428;
+  const originalHeight = 1741;
+  
+  // Calculate scale to fit within available space while maintaining aspect ratio
+  const scaleX = (width - padding * 2) / originalWidth;
+  const scaleY = (height - padding * 2) / originalHeight;
+  const scale = Math.min(scaleX, scaleY);
+  
+  // Calculate position to center the skateboard
+  const centerX = width / 2 - (originalWidth * scale) / 2;
+  const centerY = height / 2 - (originalHeight * scale) / 2;
+
   return (
     <Stage width={width} height={height}>
       <Layer>
-        <Group>
+        <Group 
+          x={centerX} 
+          y={centerY} 
+          scaleX={scale} 
+          scaleY={scale}
+          clipFunc={(ctx) => {
+            ctx.beginPath();
+            ctx.rect(0, 0, 428, 1741);
+            ctx.clip();
+          }}
+        >
           {/* Main skateboard shape */}
           <Path
+            draggable={true}
+            fill="white"
             data="M423.711 1527.14C423.711 1644.66 329.682 1737 213.855 1737C98.0288 1737 4 1644.66 4 1527.14V213.855C4 98.0288 98.0288 4 213.855 4C329.682 4 423.711 98.0288 423.711 213.855V1527.14Z"
             stroke={color}
             strokeOpacity={opacity}
