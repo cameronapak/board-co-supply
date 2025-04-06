@@ -231,54 +231,56 @@ const SkateboardDesigner: React.FC = () => {
   }, [isDragging, handleMouseMove])
 
   return (
-    <div className="p-6 relative w-full grid sm:grid-cols-[128px_1fr] max-sm:grid-rows-[350px_1fr] items-center gap-8 mx-auto">
-      <div style={{ aspectRatio: "100/413" }} ref={containerRef} className="relative px-[1px] sm:pb-[407%] max-sm:pb-0 max-sm:w-full h-[350px]">
-        <div ref={designRef} className="absolute inset-0 bg-white overflow-hidden">
-          {image && (
-            <div
-              className="absolute inset-0"
-              onMouseDown={handleMouseDown}
-              style={{
-                maskImage: `url(${skateboardMaskBase64})`,
-                WebkitMaskImage: `url(${skateboardMaskBase64})`,
-                maskSize: "100% 100%",
-                maskRepeat: "no-repeat",
-                maskPosition: "center",
-              }}
-            >
-              <div
-                className="absolute"
+    <div className="p-6 relative w-full grid sm:grid-cols-2 max-sm:grid-rows-[350px_1fr] items-center gap-8 mx-auto">
+      <div className="flex justify-center gap-4">
+        <div style={{ aspectRatio: "100/413" }} ref={containerRef} className="relative w-[128px] px-[1px] sm:pb-[125%] max-sm:pb-0 max-sm:w-full h-[350px]">
+            <div ref={designRef} className="absolute inset-0 bg-white overflow-hidden">
+            {image && (
+                <div
+                className="absolute inset-0"
+                onMouseDown={handleMouseDown}
                 style={{
-                  left: `${position.x}px`,
-                  top: `${position.y}px`,
-                  width: `${size.width}px`,
-                  height: `${size.height}px`,
-                  transform: `rotate(${rotation}deg)`,
+                    maskImage: `url(${skateboardMaskBase64})`,
+                    WebkitMaskImage: `url(${skateboardMaskBase64})`,
+                    maskSize: "100% 100%",
+                    maskRepeat: "no-repeat",
+                    maskPosition: "center",
                 }}
-              >
-                <img
-                  ref={imageRef}
-                  src={image || "/placeholder.svg"}
-                  alt="Uploaded design"
-                  className="w-full h-full object-contain"
-                  draggable={false}
-                />
-              </div>
+                >
+                <div
+                    className="absolute"
+                    style={{
+                    left: `${position.x}px`,
+                    top: `${position.y}px`,
+                    width: `${size.width}px`,
+                    height: `${size.height}px`,
+                    transform: `rotate(${rotation}deg)`,
+                    }}
+                >
+                    <img
+                    ref={imageRef}
+                    src={image || "/placeholder.svg"}
+                    alt="Uploaded design"
+                    className="w-full h-full object-contain"
+                    draggable={false}
+                    />
+                </div>
+                </div>
+            )}
+            <SkateboardTemplate
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                color="black"
+                opacity={isExporting ? 1 : 0.2}
+                fillOpacity={isExporting ? 0.5 : 0.1}
+            />
             </div>
-          )}
-          <SkateboardTemplate
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            color="black"
-            opacity={isExporting ? 1 : 0.2}
-            fillOpacity={isExporting ? 0.5 : 0.1}
-          />
+            {isDragging && showSnapLines.vertical && (
+            <div className="absolute top-0 bottom-0 left-1/2 w-px bg-blue-500 pointer-events-none" />
+            )}
+            {isDragging && showSnapLines.horizontal && (
+            <div className="absolute left-0 right-0 top-1/2 h-px bg-blue-500 pointer-events-none" />
+            )}
         </div>
-        {isDragging && showSnapLines.vertical && (
-          <div className="absolute top-0 bottom-0 left-1/2 w-px bg-blue-500 pointer-events-none" />
-        )}
-        {isDragging && showSnapLines.horizontal && (
-          <div className="absolute left-0 right-0 top-1/2 h-px bg-blue-500 pointer-events-none" />
-        )}
       </div>
       <div className="mt-4 flex flex-col space-y-4">
         <input
