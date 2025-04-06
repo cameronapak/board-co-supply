@@ -231,8 +231,8 @@ const SkateboardDesigner: React.FC = () => {
   }, [isDragging, handleMouseMove])
 
   return (
-    <div className="p-6 relative w-full grid sm:grid-cols-2 max-sm:grid-rows-[350px_1fr] items-center gap-8 mx-auto">
-      <div className="flex justify-center gap-4">
+    <div className="relative w-full grid sm:grid-cols-2 max-sm:grid-rows-[350px_1fr] items-center gap-8 mx-auto">
+      <div className="p-6 flex justify-center gap-4">
         <div style={{ aspectRatio: "100/413" }} ref={containerRef} className="relative w-[128px] px-[1px] sm:pb-[125%] max-sm:pb-0 max-sm:w-full h-[350px]">
             <div ref={designRef} className="absolute inset-0 bg-white overflow-hidden">
             {image && (
@@ -282,7 +282,7 @@ const SkateboardDesigner: React.FC = () => {
             )}
         </div>
       </div>
-      <div className="mt-4 flex flex-col space-y-4">
+      <div className="p-6 bg-slate-100 h-full w-full flex flex-col space-y-4">
         <input
           type="file"
           onChange={handleFileChange}
