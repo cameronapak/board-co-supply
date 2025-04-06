@@ -183,6 +183,8 @@ const Skateboard = ({
             {isSelected && (
               <Transformer
                 ref={transformerRef}
+                keepRatio={true}
+                centeredScaling={true}
                 boundBoxFunc={(oldBox, newBox) => {
                   // Maintain aspect ratio
                   const ratio = oldBox.width / oldBox.height;
