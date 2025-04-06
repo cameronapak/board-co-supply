@@ -7,6 +7,9 @@ import SkateboardTemplate from "./skateboard-template"
 import html2canvas from "html2canvas"
 import * as pdfjsLib from 'pdfjs-dist'
 
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+
 const SkateboardDesigner: React.FC = () => {
   const [image, setImage] = useState<string | null>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -17,15 +20,54 @@ const SkateboardDesigner: React.FC = () => {
   const [showSnapLines, setShowSnapLines] = useState({ vertical: false, horizontal: false })
   const [sizePercentage, setSizePercentage] = useState(100)
   const [isExporting, setIsExporting] = useState(false)
+  const [isValidating, setIsValidating] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const designRef = useRef<HTMLDivElement>(null)
 
   const skateboardMaskBase64 = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDI4IiBoZWlnaHQ9IjE3NDEiIHZpZXdCb3g9IjAgMCA0MjggMTc0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTQyMy43MTEgMTUyNy4xNEM0MjMuNzExIDE2NDQuNjYgMzI5LjY4MiAxNzM3IDIxMy44NTUgMTczN0M5OC4wMjg4IDE3MzcgNCAxNjQ0LjY2IDQgMTUyNy4xNFYyMTMuODU1QzQgOTguMDI4OCA5OC4wMjg4IDQgMjEzLjg1NSA0QzMyOS42ODIgNCA0MjMuNzExIDk4LjAyODggNDIzLjcxMSAyMTMuODU1VjE1MjcuMTRaIi8+PC9zdmc+"
 
+  const validateFile = async (file: File) => {
+    setIsValidating(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/validate', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        // Show error message to user
+        const errorMsg = result.message || 'Failed to validate file'
+        const details = result.details?.suggestions?.join('\n') || ''
+        alert(`${errorMsg}\n${details}`)
+        return false
+      }
+      
+      return true
+    } catch (error) {
+      alert(`Error validating file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return false
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+
+    // Validate file before processing
+    const isValid = await validateFile(file)
+    if (!isValid) {
+      // Reset input field
+      event.target.value = ''
+      return
+    }
 
     if (file.type === 'application/pdf') {
       // Handle PDF file
@@ -294,7 +336,7 @@ const SkateboardDesigner: React.FC = () => {
           <h2 className="text-2xl font-bold">Skateboard Customizer</h2>
           <button className="bg-white p-2 w-full rounded-md shadow active:shadow-none active:scale-95 transition-all duration-100">
             <label htmlFor="file-upload" className="cursor-pointer">
-              Upload Design
+              {isValidating ? 'Validating...' : 'Upload Design'}
             </label>
           </button>
           {image && (
