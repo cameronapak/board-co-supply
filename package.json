@@ -11,8 +11,11 @@
   },
   "dependencies": {
     "@opendesign/illustrator-parser-pdfcpu": "^1.1.2",
+    "@types/react-dom": "^19.1.1",
     "bun-plugin-tailwind": "^0.0.15",
     "pdf-lib": "^1.17.1",
+    "react-dom": "^19.1.0",
+    "react-konva": "^19.0.3",
     "sharp": "^0.33.5",
     "tailwindcss": "^4"
   },

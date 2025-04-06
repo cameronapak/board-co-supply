@@ -1,13 +1,14 @@
 import { type BunFile } from 'bun';
 import { validateArtwork } from './utils';
 import homepage from "./layout/index.html";
+import app from "./layout/app.html";
 
 Bun.serve({
     port: 3000,
     routes: {
         // Serve the main HTML page
         "/": homepage,
-
+        "/app": app,
         // Handle artwork validation
         "/validate": {
             POST: async (req) => {
