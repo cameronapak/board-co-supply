@@ -1,4 +1,5 @@
-import { Stage, Layer, Path, Group } from 'react-konva';
+import { Stage, Layer, Path, Group, Image, Transformer } from 'react-konva';
+import { useEffect, useState, useRef } from 'react';
 
 interface SkateboardProps {
   width?: number;
@@ -7,6 +8,7 @@ interface SkateboardProps {
   opacity?: number;
   fillOpacity?: number;
   padding?: number;
+  imageUrl?: string;
 }
 
 const Skateboard = ({ 
@@ -15,7 +17,8 @@ const Skateboard = ({
   color = '#000000',
   opacity = 1,
   fillOpacity = 1,
-  padding = 20
+  padding = 20,
+  imageUrl = 'https://konvajs.org/assets/yoda.jpg' // Default image
 }: SkateboardProps) => {
   // Original SVG dimensions
   const originalWidth = 428;
@@ -30,8 +33,44 @@ const Skateboard = ({
   const centerX = width / 2 - (originalWidth * scale) / 2;
   const centerY = height / 2 - (originalHeight * scale) / 2;
 
+  // Image state
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [isSelected, setIsSelected] = useState(false);
+  const imageRef = useRef<any>(null);
+  const transformerRef = useRef<any>(null);
+
+  // Load the image
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = imageUrl;
+    img.onload = () => {
+      setImage(img);
+    };
+  }, [imageUrl]);
+
+  // Set up transformer when image is selected
+  useEffect(() => {
+    if (isSelected && transformerRef.current && imageRef.current) {
+      transformerRef.current.nodes([imageRef.current]);
+      transformerRef.current.getLayer().batchDraw();
+    }
+  }, [isSelected]);
+
+  // Handle selection
+  const handleSelect = () => {
+    setIsSelected(true);
+  };
+
+  // Handle deselection when clicking elsewhere on stage
+  const handleCheckDeselect = (e: any) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setIsSelected(false);
+    }
+  };
+
   return (
-    <Stage width={width} height={height}>
+    <Stage width={width} height={height} onClick={handleCheckDeselect}>
       <Layer>
         <Group 
           x={centerX} 
@@ -126,6 +165,39 @@ const Skateboard = ({
             fillOpacity={fillOpacity}
           />
         </Group>
+
+        {/* Draggable and resizable image */}
+        {image && (
+          <>
+            <Image
+              ref={imageRef}
+              image={image}
+              x={width / 2 - 100}
+              y={height / 2 - 100}
+              width={200}
+              height={200}
+              draggable
+              onClick={handleSelect}
+              onTap={handleSelect}
+            />
+            {isSelected && (
+              <Transformer
+                ref={transformerRef}
+                boundBoxFunc={(oldBox, newBox) => {
+                  // Maintain aspect ratio
+                  const ratio = oldBox.width / oldBox.height;
+                  const newWidth = Math.max(30, newBox.width);
+                  const newHeight = newWidth / ratio;
+                  return {
+                    ...newBox,
+                    width: newWidth,
+                    height: newHeight,
+                  };
+                }}
+              />
+            )}
+          </>
+        )}
       </Layer>
     </Stage>
   );
