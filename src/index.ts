@@ -137,15 +137,6 @@ Bun.serve({
             }
         },
 
-        // Serve the Skateboard PDF file
-        "/skateboard.pdf": {
-            GET: () => {
-                return new Response(Bun.file('./public/skateboard.pdf'), {
-                    headers: { 'Content-Type': 'application/pdf' }
-                });
-            }
-        },
-
         // Catch-all route for unmatched paths
         "/*": () => new Response('Not Found', { status: 404 })
     },
