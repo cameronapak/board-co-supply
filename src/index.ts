@@ -119,9 +119,37 @@ Bun.serve({
             }
         },
 
+        // Serve the PDF worker file
+        "/pdf.worker.min.js": {
+            GET: () => {
+                return new Response(Bun.file('./public/pdf.worker.min.js'), {
+                    headers: { 'Content-Type': 'application/javascript' }
+                });
+            }
+        },
+
+        // Serve the CMaps files
+        "/cmaps/": {
+            GET: () => {
+                return new Response(Bun.file('./public/cmaps/'), {
+                    headers: { 'Content-Type': 'application/javascript' }
+                });
+            }
+        },
+
+        // Serve the Skateboard PDF file
+        "/skateboard.pdf": {
+            GET: () => {
+                return new Response(Bun.file('./public/skateboard.pdf'), {
+                    headers: { 'Content-Type': 'application/pdf' }
+                });
+            }
+        },
+
         // Catch-all route for unmatched paths
         "/*": () => new Response('Not Found', { status: 404 })
-    }
+    },
+    development: Bun.env.NODE_ENV === "development"
 });
 
 console.log("Server is running on http://localhost:3000");
