@@ -7,55 +7,10 @@ import { useState, useRef, useCallback, useEffect, memo } from "react";
 import { RotateCw, Download } from "lucide-react";
 import SkateboardTemplate from "./skateboard-template";
 import html2canvas from "html2canvas";
-import { Document, Page, pdfjs } from "react-pdf";
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+import * as pdfjsLib from "pdfjs-dist";
 
 // Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
-
-// PDF options for better character support
-const pdfOptions = {
-  cMapUrl: '/cmaps/',
-  cMapPacked: true,
-};
-
-// Memoized PDF renderer component
-const PdfRenderer = ({
-  file,
-  onLoadSuccess,
-  onLoadError,
-  onPageRenderSuccess,
-}: {
-  file: File | null;
-  onLoadSuccess: (info: { numPages: number }) => void;
-  onLoadError: (error: Error) => void;
-  onPageRenderSuccess: (page: any) => void;
-}) => {
-  if (!file) {
-    return null;
-  }
-
-  return (
-    <div
-      style={{ position: "absolute", left: "-9999px", visibility: "hidden" }}
-    >
-      <Document
-        file={file}
-        onLoadSuccess={onLoadSuccess}
-        onLoadError={onLoadError}
-        options={pdfOptions}
-      >
-        <Page
-          pageNumber={1}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          onRenderSuccess={onPageRenderSuccess}
-        />
-      </Document>
-    </div>
-  );
-};
+pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 const SkateboardDesigner: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -94,9 +49,9 @@ const SkateboardDesigner: React.FC = () => {
     if (isRendering) {
       return;
     }
-    
+
     setIsRendering(true);
-    
+
     setTimeout(() => {
       const pdfPage = document.querySelector(".react-pdf__Page");
       if (!pdfPage) {
@@ -191,8 +146,56 @@ const SkateboardDesigner: React.FC = () => {
 
     if (file.type === "application/pdf") {
       // Handle PDF file
-      setPdfFile(file);
-      setPageNumber(1);
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.0 });
+
+      // Create canvas to render PDF
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) {
+        return;
+      }
+
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      // Render PDF page to canvas
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
+
+      // Convert canvas to image data URL
+      const imageDataUrl = canvas.toDataURL("image/png");
+      setImage(imageDataUrl);
+
+      if (containerRef.current) {
+        const img = new Image();
+        img.onload = () => {
+          const containerWidth = containerRef.current!.offsetWidth;
+          const containerHeight = containerRef.current!.offsetHeight;
+          const imageAspectRatio = img.width / img.height;
+
+          let newWidth, newHeight;
+
+          if (containerWidth / containerHeight > imageAspectRatio) {
+            newHeight = containerHeight;
+            newWidth = newHeight * imageAspectRatio;
+          } else {
+            newWidth = containerWidth;
+            newHeight = newWidth / imageAspectRatio;
+          }
+
+          setSize({ width: newWidth, height: newHeight });
+          setPosition({
+            x: (containerWidth - newWidth) / 2,
+            y: (containerHeight - newHeight) / 2,
+          });
+        };
+        img.src = imageDataUrl;
+      }
     } else {
       // Handle image file
       setPdfFile(null);
@@ -441,13 +444,6 @@ const SkateboardDesigner: React.FC = () => {
           )}
         </div>
       </div>
-
-      <PdfRenderer
-        file={pdfFile}
-        onLoadSuccess={onDocumentLoadSuccess}
-        onLoadError={onDocumentLoadError}
-        onPageRenderSuccess={onPageRenderSuccess}
-      />
 
       <div className="p-6 bg-slate-100 h-full w-full flex flex-col space-y-4">
         <input
