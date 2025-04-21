@@ -41,7 +41,7 @@ const PdfRenderer = ({
       style={{ position: "absolute", left: "-9999px", visibility: "hidden" }}
     >
       <Document
-        file={new URL("/skateboard.pdf", window.location.origin).href}
+        file={file}
         onLoadSuccess={onLoadSuccess}
         onLoadError={onLoadError}
         options={pdfOptions}
@@ -91,9 +91,12 @@ const SkateboardDesigner: React.FC = () => {
   );
 
   const onPageRenderSuccess = useCallback(() => {
-    if (isRendering) return;
+    if (isRendering) {
+      return;
+    }
+    
     setIsRendering(true);
-
+    
     setTimeout(() => {
       const pdfPage = document.querySelector(".react-pdf__Page");
       if (!pdfPage) {
