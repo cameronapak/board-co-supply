@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 import fs from "node:fs";
 import path from "node:path";
 
@@ -15,22 +17,25 @@ const pdfjsWorkerPath = path.join(pdfjsDistPath, "build", "pdf.worker.min.js");
 const cMapsDir = path.join(pdfjsDistPath, "cmaps");
 const publicCMapsDir = path.join(publicDir, "cmaps");
 
-if (fs.existsSync(pdfjsWorkerPath)) {
-  fs.copyFileSync(pdfjsWorkerPath, path.join(publicDir, "pdf.worker.min.js"));
-  console.log("PDF.js worker copied successfully");
-} else {
-  console.error("PDF.js worker file not found at:", pdfjsWorkerPath);
-  process.exit(1);
-}
-
-// Copy cMaps
-if (fs.existsSync(cMapsDir)) {
-  if (!fs.existsSync(publicCMapsDir)) {
-    fs.mkdirSync(publicCMapsDir, { recursive: true });
+try {
+  if (fs.existsSync(pdfjsWorkerPath)) {
+    fs.copyFileSync(pdfjsWorkerPath, path.join(publicDir, "pdf.worker.min.js"));
+    console.log("✅ PDF.js worker copied successfully");
+  } else {
+    throw new Error(`PDF.js worker file not found at: ${pdfjsWorkerPath}`);
   }
-  fs.cpSync(cMapsDir, publicCMapsDir, { recursive: true });
-  console.log("PDF.js cMaps copied successfully");
-} else {
-  console.error("PDF.js cMaps directory not found at:", cMapsDir);
+
+  // Copy cMaps
+  if (fs.existsSync(cMapsDir)) {
+    if (!fs.existsSync(publicCMapsDir)) {
+      fs.mkdirSync(publicCMapsDir, { recursive: true });
+    }
+    fs.cpSync(cMapsDir, publicCMapsDir, { recursive: true });
+    console.log("✅ PDF.js cMaps copied successfully");
+  } else {
+    throw new Error(`PDF.js cMaps directory not found at: ${cMapsDir}`);
+  }
+} catch (error) {
+  console.error("❌ Error during postinstall:", error.message);
   process.exit(1);
 }
