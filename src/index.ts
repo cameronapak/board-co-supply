@@ -149,7 +149,7 @@ Bun.serve({
         // Catch-all route for unmatched paths
         "/*": () => new Response('Not Found', { status: 404 })
     },
-    development: Bun.env.NODE_ENV === "development"
+    development: process.env.NODE_ENV === "development"
 });
 
 console.log("Server is running on http://localhost:3000");

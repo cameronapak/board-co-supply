@@ -25,7 +25,7 @@
     "tailwindcss": "^4"
   },
   "scripts": {
-    "dev": "bun run src/index.ts --watch",
+    "dev": "NODE_ENV=development bun run src/index.ts --watch",
     "build-executable": "bun build --compile --minify --sourcemap ./src/index.ts --outfile ./dist/board-co-supply",
     "postinstall": "bun ./scripts/postinstall.mjs"
   }
