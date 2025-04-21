@@ -1,6 +1,8 @@
 "use client"
 
-import type React from "react"
+// NOTE: pdfjs-dist is throwing Promise.withResolvers is not a function
+// This is a workaround to fix the issue
+import '../utils/polyfill.ts';
 import { useState, useRef, useCallback, useEffect, memo } from "react"
 import { RotateCw, Download } from "lucide-react"
 import SkateboardTemplate from "./skateboard-template"
@@ -10,22 +12,34 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
 
 // Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
+// pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 // PDF options for better character support
 const pdfOptions = {
-  cMapUrl: '/cmaps/',
+  // cMapUrl: '/cmaps/',
+  cMapUrl: new URL(
+    "pdfjs-dist/build/cmaps/",
+    import.meta.url
+  ).toString(),
   cMapPacked: true,
 }
 
 // Memoized PDF renderer component
-const PdfRenderer = memo(({ file, onLoadSuccess, onLoadError, onPageRenderSuccess }: {
+const PdfRenderer = ({ file, onLoadSuccess, onLoadError, onPageRenderSuccess }: {
   file: File | null;
   onLoadSuccess: (info: { numPages: number }) => void;
   onLoadError: (error: Error) => void;
   onPageRenderSuccess: (page: any) => void;
 }) => {
-  if (!file) return null;
+  if (!file) {
+    return null;
+  }
+
+  console.log(file)
 
   return (
     <div style={{ position: 'absolute', left: '-9999px', visibility: 'hidden' }}>
@@ -44,10 +58,7 @@ const PdfRenderer = memo(({ file, onLoadSuccess, onLoadError, onPageRenderSucces
       </Document>
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Only re-render if the file changes
-  return prevProps.file === nextProps.file;
-});
+}
 
 const SkateboardDesigner: React.FC = () => {
   const [image, setImage] = useState<string | null>(null)
