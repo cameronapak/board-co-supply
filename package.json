@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react-pdf": "^7.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -14,13 +15,17 @@
     "@types/react-dom": "^19.1.1",
     "bun-plugin-tailwind": "^0.0.15",
     "pdf-lib": "^1.17.1",
-    "react-dom": "^19.1.0",
+    "pdfjs-dist": "^3.11.174",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-konva": "^19.0.3",
+    "react-pdf": "^7.6.0",
     "sharp": "^0.33.5",
     "tailwindcss": "^4"
   },
   "scripts": {
     "dev": "bun run src/index.ts --watch",
-    "build-executable": "bun build --compile --minify --sourcemap ./src/index.ts --outfile ./dist/board-co-supply"
+    "build-executable": "bun build --compile --minify --sourcemap ./src/index.ts --outfile ./dist/board-co-supply",
+    "postinstall": "bun ./scripts/postinstall.mjs"
   }
 }

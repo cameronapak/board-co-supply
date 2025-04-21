@@ -1,17 +1,57 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, memo } from "react"
 import { RotateCw, Download } from "lucide-react"
 import SkateboardTemplate from "./skateboard-template"
 import html2canvas from "html2canvas"
-import * as pdfjsLib from 'pdfjs-dist'
+import { Document, Page, pdfjs } from 'react-pdf'
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
+import 'react-pdf/dist/esm/Page/TextLayer.css'
 
 // Initialize PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js"
+
+// PDF options for better character support
+const pdfOptions = {
+  cMapUrl: '/cmaps/',
+  cMapPacked: true,
+}
+
+// Memoized PDF renderer component
+const PdfRenderer = memo(({ file, onLoadSuccess, onLoadError, onPageRenderSuccess }: {
+  file: File | null;
+  onLoadSuccess: (info: { numPages: number }) => void;
+  onLoadError: (error: Error) => void;
+  onPageRenderSuccess: (page: any) => void;
+}) => {
+  if (!file) return null;
+
+  return (
+    <div style={{ position: 'absolute', left: '-9999px', visibility: 'hidden' }}>
+      <Document
+        file={file}
+        onLoadSuccess={onLoadSuccess}
+        onLoadError={onLoadError}
+        options={pdfOptions}
+      >
+        <Page 
+          pageNumber={1}
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+          onRenderSuccess={onPageRenderSuccess}
+        />
+      </Document>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Only re-render if the file changes
+  return prevProps.file === nextProps.file;
+});
 
 const SkateboardDesigner: React.FC = () => {
   const [image, setImage] = useState<string | null>(null)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [size, setSize] = useState({ width: 428, height: 1741 })
   const [rotation, setRotation] = useState(0)
@@ -21,41 +61,101 @@ const SkateboardDesigner: React.FC = () => {
   const [sizePercentage, setSizePercentage] = useState(100)
   const [isExporting, setIsExporting] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
+  const [numPages, setNumPages] = useState<number | null>(null)
+  const [pageNumber, setPageNumber] = useState(1)
+  const [isRendering, setIsRendering] = useState(false)
   const imageRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const designRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const skateboardMaskBase64 = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDI4IiBoZWlnaHQ9IjE3NDEiIHZpZXdCb3g9IjAgMCA0MjggMTc0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTQyMy43MTEgMTUyNy4xNEM0MjMuNzExIDE2NDQuNjYgMzI5LjY4MiAxNzM3IDIxMy44NTUgMTczN0M5OC4wMjg4IDE3MzcgNCAxNjQ0LjY2IDQgMTUyNy4xNFYyMTMuODU1QzQgOTguMDI4OCA5OC4wMjg4IDQgMjEzLjg1NSA0QzMyOS42ODIgNCA0MjMuNzExIDk4LjAyODggNDIzLjcxMSAyMTMuODU1VjE1MjcuMTRaIi8+PC9zdmc+"
 
-  const validateFile = async (file: File) => {
-    setIsValidating(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const response = await fetch('/validate', {
-        method: 'POST',
-        body: formData
-      })
-      
-      const result = await response.json()
-      
-      if (!response.ok) {
-        // Show error message to user
-        const errorMsg = result.message || 'Failed to validate file'
-        const details = result.details?.suggestions?.join('\n') || ''
-        alert(`${errorMsg}\n${details}`)
-        return false
+  const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
+    setNumPages(numPages)
+  }, [])
+
+  const onPageRenderSuccess = useCallback(() => {
+    if (isRendering) return;
+    setIsRendering(true);
+    
+    setTimeout(() => {
+      const pdfPage = document.querySelector('.react-pdf__Page');
+      if (!pdfPage) {
+        setIsRendering(false);
+        return;
       }
+
+      if (!canvasRef.current) {
+        const canvas = document.createElement('canvas');
+        canvasRef.current = canvas;
+        document.body.appendChild(canvas);
+        canvas.style.display = 'none';
+      }
+
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
       
-      return true
-    } catch (error) {
-      alert(`Error validating file: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      return false
-    } finally {
-      setIsValidating(false)
-    }
-  }
+      if (context) {
+        const scale = 2; // Higher scale for better quality
+        canvas.width = pdfPage.clientWidth * scale;
+        canvas.height = pdfPage.clientHeight * scale;
+        
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Scale up for better resolution
+        context.scale(scale, scale);
+        
+        // Convert to image
+        const imageDataUrl = canvas.toDataURL('image/png');
+        setImage(imageDataUrl);
+        
+        if (containerRef.current) {
+          const img = new Image();
+          img.onload = () => {
+            const containerWidth = containerRef.current!.offsetWidth;
+            const containerHeight = containerRef.current!.offsetHeight;
+            const imageAspectRatio = img.width / img.height;
+
+            let newWidth, newHeight;
+
+            if (containerWidth / containerHeight > imageAspectRatio) {
+              newHeight = containerHeight;
+              newWidth = newHeight * imageAspectRatio;
+            } else {
+              newWidth = containerWidth;
+              newHeight = newWidth / imageAspectRatio;
+            }
+
+            setSize({ width: newWidth, height: newHeight });
+            setPosition({
+              x: (containerWidth - newWidth) / 2,
+              y: (containerHeight - newHeight) / 2,
+            });
+            setIsRendering(false);
+          };
+          img.src = imageDataUrl;
+        } else {
+          setIsRendering(false);
+        }
+      } else {
+        setIsRendering(false);
+      }
+    }, 100);
+  }, [isRendering]);
+
+  const onDocumentLoadError = useCallback((error: Error) => {
+    console.error('Error loading PDF:', error);
+    alert('Error loading PDF. Please try a different file.');
+    setPdfFile(null);
+  }, []);
+
+  const onPageRenderError = useCallback((error: Error) => {
+    console.error('Error rendering PDF page:', error);
+    alert('Error rendering PDF page. Please try a different file.');
+    setPdfFile(null);
+  }, []);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -71,56 +171,11 @@ const SkateboardDesigner: React.FC = () => {
 
     if (file.type === 'application/pdf') {
       // Handle PDF file
-      const arrayBuffer = await file.arrayBuffer()
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-      const page = await pdf.getPage(1)
-      const viewport = page.getViewport({ scale: 1.0 })
-
-      // Create canvas to render PDF
-      const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d')
-      if (!context) return
-
-      canvas.height = viewport.height
-      canvas.width = viewport.width
-
-      // Render PDF page to canvas
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise
-
-      // Convert canvas to image data URL
-      const imageDataUrl = canvas.toDataURL('image/png')
-      setImage(imageDataUrl)
-
-      if (containerRef.current) {
-        const img = new Image()
-        img.onload = () => {
-          const containerWidth = containerRef.current!.offsetWidth
-          const containerHeight = containerRef.current!.offsetHeight
-          const imageAspectRatio = img.width / img.height
-
-          let newWidth, newHeight
-
-          if (containerWidth / containerHeight > imageAspectRatio) {
-            newHeight = containerHeight
-            newWidth = newHeight * imageAspectRatio
-          } else {
-            newWidth = containerWidth
-            newHeight = newWidth / imageAspectRatio
-          }
-
-          setSize({ width: newWidth, height: newHeight })
-          setPosition({
-            x: (containerWidth - newWidth) / 2,
-            y: (containerHeight - newHeight) / 2,
-          })
-        }
-        img.src = imageDataUrl
-      }
+      setPdfFile(file)
+      setPageNumber(1)
     } else {
       // Handle image file
+      setPdfFile(null)
       const reader = new FileReader()
       reader.onload = (e) => {
         const imageDataUrl = e.target?.result as string
@@ -158,6 +213,36 @@ const SkateboardDesigner: React.FC = () => {
     }
     setRotation(0)
     setSizePercentage(100)
+  }
+
+  const validateFile = async (file: File) => {
+    setIsValidating(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/validate', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        // Show error message to user
+        const errorMsg = result.message || 'Failed to validate file'
+        const details = result.details?.suggestions?.join('\n') || ''
+        alert(`${errorMsg}\n${details}`)
+        return false
+      }
+      
+      return true
+    } catch (error) {
+      alert(`Error validating file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      return false
+    } finally {
+      setIsValidating(false)
+    }
   }
 
   const handleMouseDown = useCallback(
@@ -324,6 +409,14 @@ const SkateboardDesigner: React.FC = () => {
             )}
         </div>
       </div>
+      
+      <PdfRenderer
+        file={pdfFile}
+        onLoadSuccess={onDocumentLoadSuccess}
+        onLoadError={onDocumentLoadError}
+        onPageRenderSuccess={onPageRenderSuccess}
+      />
+      
       <div className="p-6 bg-slate-100 h-full w-full flex flex-col space-y-4">
         <input
           type="file"
